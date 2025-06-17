@@ -1,7 +1,5 @@
 from telegram import Update
-from telegram.ext import (
-    ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
-)
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 from datetime import datetime
 import os
 
@@ -24,12 +22,10 @@ async def handle_transaction(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
             await update.message.reply_text(
                 f"{'📥 入帳成功' if tx_type == 'in' else '📤 下發成功'}\n"
-                f"金額：{abs(amount)}\n備註：{note}"
+                f"{amount:.2f} - {note}"
             )
-        except Exception:
+        except:
             await update.message.reply_text("❌ 格式錯誤，請使用：+金額 備註 或 -金額 備註")
-    else:
-        await update.message.reply_text("❌ 格式錯誤，請使用：+金額 備註 或 -金額 備註")
 
 async def report_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     today = datetime.now().strftime('%Y-%m-%d')
@@ -40,23 +36,22 @@ async def report_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     remaining = total_in - total_out
 
     msg = "📊 今日報表\n"
-    msg += f"\n今日入帳（{len(ins)}筆）\n"
+    msg += f"\n今日入款 ({len(ins)}筆)\n"
     for x in ins:
-        msg += f"{x[1]}　{x[3]:.2f}　{x[4]}\n"
-    msg += f"\n今日下發（{len(outs)}筆）\n"
+        msg += f"{x[1]} 　{x[3]:.2f} 　{x[4]}\n"
+
+    msg += f"\n今日下發 ({len(outs)}筆)\n"
     for x in outs:
-        msg += f"{x[1]}　{x[3]:.2f}　{x[4]}\n"
-    msg += f"\n總入帳：{total_in:.2f}\n已下發：{total_out:.2f}\n餘額：{remaining:.2f}"
+        msg += f"{x[1]} 　{x[3]:.2f} 　{x[4]}\n"
+
+    msg += f"\n總入款: {total_in:.2f}\n已下發: {total_out:.2f}\n餘額: {remaining:.2f}"
 
     await update.message.reply_text(msg)
 
 if __name__ == '__main__':
-    import asyncio
+    app = ApplicationBuilder().token(os.getenv("BOT_TOKEN")).build()
 
-    async def main():
-        app = ApplicationBuilder().token(os.getenv("BOT_TOKEN")).build()
-        app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_transaction))
-        app.add_handler(CommandHandler("report", report_handler))
-        await app.run_polling()
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_transaction))
+    app.add_handler(CommandHandler("report", report_handler))
 
-    asyncio.run(main())
+    app.run_polling()
