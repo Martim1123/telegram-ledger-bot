@@ -1,11 +1,12 @@
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram.ext import (
+    ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+)
 from datetime import datetime
 import os
 
 ledger = []
 
-# 處理入帳/出帳
 async def handle_transaction(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip()
     user = update.effective_user.first_name
@@ -22,15 +23,13 @@ async def handle_transaction(update: Update, context: ContextTypes.DEFAULT_TYPE)
             ledger.append((today, timestamp, tx_type, abs(amount), note, user))
 
             await update.message.reply_text(
-                f"✅ {'入帳成功' if tx_type == 'in' else '支出成功'}\n"
-                f"[{timestamp}] {user}：{abs(amount)} - {note}"
+                f"✅ 入帳成功" if tx_type == 'in' else "💸 下發成功"
             )
         except:
             await update.message.reply_text("❌ 格式錯誤，請使用：+金額 備註 或 -金額 備註")
     else:
-        await update.message.reply_text("❌ 格式錯誤，請使用：+金額 備註 或 -金額 備註")
+        await update.message.reply_text("⚠️ 格式錯誤，請使用：+金額 備註 或 -金額 備註")
 
-# 報表指令
 async def report_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     today = datetime.now().strftime('%Y-%m-%d')
     ins = [x for x in ledger if x[0] == today and x[2] == 'in']
@@ -40,25 +39,19 @@ async def report_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     remaining = total_in - total_out
 
     msg = "📊 今日報表\n"
-    msg += f"\n今日入帳 ({len(ins)}筆)\n"
+    msg += f"\n今日入帳（{len(ins)}筆）\n"
     for x in ins:
-        msg += f"{x[1]}  {x[3]:.2f} {x[4]} ({x[5]})\n"
+        msg += f"{x[1]}   {x[3]:.2f}  {x[4]}\n"
 
-    msg += f"\n今日支出 ({len(outs)}筆)\n"
+    msg += f"\n今日下發（{len(outs)}筆）\n"
     for x in outs:
-        msg += f"{x[1]}  {x[3]:.2f} {x[4]} ({x[5]})\n"
+        msg += f"{x[1]}   {x[3]:.2f}  {x[4]}\n"
 
-    msg += f"\n總收入: {total_in:.2f}\n"
-    msg += f"總支出: {total_out:.2f}\n"
-    msg += f"結餘: {remaining:.2f}"
-
+    msg += f"\n總入帳：{total_in:.2f}\n已下發：{total_out:.2f}\n餘額：{remaining:.2f}"
     await update.message.reply_text(msg)
 
-# 建立應用程式並啟動
 app = ApplicationBuilder().token(os.getenv("BOT_TOKEN")).build()
-
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_transaction))
+app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_transaction))
 app.add_handler(CommandHandler("report", report_handler))
 
 app.run_polling()
-
