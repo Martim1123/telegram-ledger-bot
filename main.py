@@ -26,6 +26,8 @@ async def handle_transaction(update: Update, context: ContextTypes.DEFAULT_TYPE)
             )
         except:
             await update.message.reply_text("❌ 格式錯誤，請使用：+金額 備註 或 -金額 備註")
+    else:
+        await update.message.reply_text("請輸入 + 或 - 開頭的金額訊息。")
 
 async def report_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     today = datetime.now().strftime('%Y-%m-%d')
@@ -36,15 +38,15 @@ async def report_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     remaining = total_in - total_out
 
     msg = "📊 今日報表\n"
-    msg += f"\n今日入款 ({len(ins)}筆)\n"
+    msg += f"\n📥 今日入帳 ({len(ins)} 筆)\n"
     for x in ins:
         msg += f"{x[1]} 　{x[3]:.2f} 　{x[4]}\n"
 
-    msg += f"\n今日下發 ({len(outs)}筆)\n"
+    msg += f"\n📤 今日下發 ({len(outs)} 筆)\n"
     for x in outs:
         msg += f"{x[1]} 　{x[3]:.2f} 　{x[4]}\n"
 
-    msg += f"\n總入款: {total_in:.2f}\n已下發: {total_out:.2f}\n餘額: {remaining:.2f}"
+    msg += f"\n💰 總入帳: {total_in:.2f}\n💸 已下發: {total_out:.2f}\n🪙 餘額: {remaining:.2f}"
 
     await update.message.reply_text(msg)
 
