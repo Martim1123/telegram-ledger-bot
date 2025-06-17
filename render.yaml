@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: telegram-ledger-bot
+    runtime: python
+    buildCommand: ""
+    startCommand: "python main.py"
+    envVars:
+      - key: BOT_TOKEN
+        value: YOUR_TOKEN_HERE
