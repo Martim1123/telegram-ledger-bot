@@ -11,6 +11,7 @@ import os
 
 ledger = []
 
+
 async def handle_transaction(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip()
     user = update.effective_user.first_name
@@ -27,12 +28,14 @@ async def handle_transaction(update: Update, context: ContextTypes.DEFAULT_TYPE)
             ledger.append((today, timestamp, tx_type, abs(amount), note, user))
 
             await update.message.reply_text(
-                f"📥 入帳成功" if tx_type == 'in' else "📤 下發成功"
+                f"✅ {'入帳成功' if tx_type == 'in' else '支出成功'}\n"
+                f"【{timestamp}】{abs(amount)} - {note}"
             )
         except:
             await update.message.reply_text("❌ 格式錯誤，請使用：+金額 備註 或 -金額 備註")
     else:
-        await update.message.reply_text("❌ 請輸入正確的交易格式（例如 +50 晚餐 -100 房租）")
+        await update.message.reply_text("❌ 無效輸入格式，請輸入金額開頭的紀錄，例如：+100 午餐")
+
 
 async def report_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     today = datetime.now().strftime('%Y-%m-%d')
@@ -43,15 +46,16 @@ async def report_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     remaining = total_in - total_out
 
     msg = "📊 今日報表\n"
-    msg += f"\n📥今日入帳（{len(ins)}筆）\n"
+    msg += f"\n今日入帳（{len(ins)}筆）\n"
     for x in ins:
         msg += f"{x[1]}　{x[3]:.2f}　{x[4]}\n"
-    msg += f"\n📤今日下發（{len(outs)}筆）\n"
+    msg += f"\n今日支出（{len(outs)}筆）\n"
     for x in outs:
         msg += f"{x[1]}　{x[3]:.2f}　{x[4]}\n"
-    msg += f"\n總入帳：{total_in:.2f}\n總下發：{total_out:.2f}\n餘額：{remaining:.2f}"
+    msg += f"\n總收入：{total_in:.2f}\n已支出：{total_out:.2f}\n餘額：{remaining:.2f}"
 
     await update.message.reply_text(msg)
+
 
 if __name__ == '__main__':
     app = ApplicationBuilder().token(os.getenv("BOT_TOKEN")).build()
